@@ -8,7 +8,7 @@ using Glob
 foreach(include, glob("*.jl", "lib"))
 
 # number of grid points
-const N = 800
+const N = 2000
 
 #
 # Problem constants
@@ -40,34 +40,29 @@ function hypersensitive()
     @variable(model, xmin <= x[i=1:N] <= xmax, start=0)
     @variable(model, v[i=1:N], start=0)
     @variable(model, umin <= u[i=1:N] <= umax, start=0)
-
-    #
-    # Endpoint variable slices
-    #
-
-    xi = vcat(x[1])
-    xf = vcat(x[N])
+    @variable(model, xmin <= xa <= xmax, start = 0)
+    @variable(model, xmin <= xb <= xmax, start = 0)
 
     #
     # Endpoint constraints
     #
 
-    fix(x[1], xival, force=true)
-    fix(x[N], xfval, force=true)
+    fix(xa, xival, force=true)
+    fix(xb, xfval, force=true)
 
     #
     # Dynamical constraints
     #
 
-    @constraint(model, x == xi .* ones(N) + Ba * v)
-    @constraint(model, v == (tf - ti) ./ 2 * ( -x.^3 .+ u ))
-    @constraint(model, xf == xi + wB' * v)
+    @constraint(model, x == xa .* ones(N) + Ba * v)
+    @constraint(model, v == (tf - ti) / 2 * ( -x.^3 .+ u ))
+    @constraint(model, xb == xa + wB' * v)
 
     #
     # Objective
     #
 
-    @objective(model, Min, dot(wB, 0.5*(x.^2 .+ u.^2)))
+    @objective(model, Min, (tf - ti) / 2 * dot(wB, 0.5*(x.^2 .+ u.^2)))
 
     #
     # Solve the problem
