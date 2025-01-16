@@ -8,7 +8,7 @@ using Glob
 foreach(include, glob("*.jl", "lib"))
 
 # number of grid points
-const N = 150
+const N = 20
 
 #
 # Problem constants
@@ -42,6 +42,12 @@ function descent_1d()
     @variable(model, hdot[i=1:N], start=0)
     @variable(model, vdot[i=1:N], start=0)
     @variable(model, mdot[i=1:N], start=0)
+    @variable(model, ha, start=hi)
+    @variable(model, va, start=vi)
+    @variable(model, ma, start=mi)
+    @variable(model, hb, start=0)
+    @variable(model, vb, start=0)
+    @variable(model, mb, start=0)
     @variable(model, 0 <= T[i=1:N] <= Tmax, start=0)
     @variable(model, ti, start=0)
     @variable(model, tf, start=1)
@@ -52,18 +58,18 @@ function descent_1d()
 
     X = hcat( h, v, m )
     V = hcat( hdot, vdot, mdot )
-    Xi = hcat(h[1], v[1], m[1])
-    Xf = hcat(h[N], v[N], m[N])
+    Xi = hcat(ha, va, ma)
+    Xf = hcat(hb, vb, mb)
 
     #
     # Endpoint constraints
     #
 
-    fix(h[1], hi, force=true)
-    fix(v[1], vi, force=true)
-    fix(m[1], mi, force=true)
-    fix(h[N], hf, force=true)
-    fix(v[N], vf, force=true)
+    fix(ha, hi, force=true)
+    fix(va, vi, force=true)
+    fix(ma, mi, force=true)
+    fix(hb, hf, force=true)
+    fix(vb, vf, force=true)
     fix(ti, 0, force=true)
 
     #
@@ -72,19 +78,20 @@ function descent_1d()
 
     F = hcat(
              v,
-             -1 .+ T ./ m,
+             -1 .+ T ./  m,
              -T ./ 2.349,
             )
 
-    @constraint(model, dyn1, X == Xi .* ones(N) + Ba * V)
-    @constraint(model, dyn2, V == (tf - ti) ./ 2 * F)
-    @constraint(model, dyn3, Xf == Xi + wB' * V)
+    @constraint(model, dyn1, 0 == Xi .* ones(N) + Ba * V - X)
+    @constraint(model, dyn2, 0 == (tf - ti) / 2 * F - V)
+    @constraint(model, dyn3, 0 == Xf - Xi - wB' * V)
 
     #
     # Objective
     #
 
-    @objective(model, Max, wB' * T ./ 2.349)
+    @objective(model, Min, ((tf - ti) / 2 * wB)' * (T ./ 2.349))
+    #@objective(model, Max, m[end])
 
     #
     # Solve the problem
@@ -92,10 +99,15 @@ function descent_1d()
 
     solve_and_print_solution(model)
 
-    λ1 = value.(dual(dyn1))
-    λ2 = value.(dual(dyn2))
-    λ3 = value.(dual(dyn3))
+    Ω = value.(dual(dyn1)) ./ wB
+    Λ = value.(dual(dyn2)) ./ wB
+    λb = value.(dual(dyn3))
+    λa = λb - wB' * Ω
 
+    display(Λ)
+    display(Ω)
+    display(λa)
+    display(λb)
 
     p1 = Plots.plot(
                     tau,
@@ -117,32 +129,38 @@ function descent_1d()
                     tau,
                     value.(T),
                     xlabel = "Tau",
-                    ylabel = "Control",
+                    ylabel = "Thrust",
                     legend = false,
                    )
-
-    display(Plots.plot(p1, p2, p3, layout=(2,2), legend=false))
 
     p4 = Plots.plot(
                     tau,
-                    value.(λ1),
+                    value.(m),
                     xlabel = "Tau",
-                    ylabel = "Costate",
-                    legend = false,
-                   )
-    p5 = Plots.plot(
-                    tau,
-                    value.(λ2),
-                    xlabel = "Tau",
-                    ylabel = "Costate",
+                    ylabel = "Mass",
                     legend = false,
                    )
 
-    display(Plots.plot(p4, p5, layout=(2,1), legend=false))
+    p5 = Plots.plot(
+                    tau,
+                    value.(Λ),
+                    xlabel = "Tau",
+                    ylabel = "Λ",
+                    legend = false,
+                    #ylim=(-0.1, 0.1),
+                   )
+    p6 = Plots.plot(
+                    tau,
+                    value.(Ω),
+                    xlabel = "Tau",
+                    ylabel = "Ω",
+                    legend = false,
+                   )
+
+    display(Plots.plot(p1, p2, p3, p4, p5, p6, layout=(2,3), legend=false))
     readline()
 
     @assert is_solved_and_feasible(model)
 end
 
 descent_1d()
-
