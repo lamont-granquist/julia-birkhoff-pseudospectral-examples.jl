@@ -82,9 +82,9 @@ function descent_1d()
              -T ./ 2.349,
             )
 
-    @constraint(model, dyn1, 0 == Xi .* ones(N) + Ba * V - X)
+    @constraint(model, dyn1, 0 == X - Ba * V - Xi .* ones(N))
     @constraint(model, dyn2, 0 == (tf - ti) / 2 * F - V)
-    @constraint(model, dyn3, 0 == Xf - Xi - wB' * V)
+    @constraint(model, dyn3, 0 == Xi + wB' * V - Xf)
 
     #
     # Objective
