@@ -35,7 +35,7 @@ function gen_sb(P, N, tau) # XXX: broke
         Sb[j, 2] = rpi * (tau[j]^2 - tau[end]^2)
         for n in 2:N
             # FIXME: doesn't seem to be right
-            Sb[j, n+1] = rpi2 * ( P[n+2,j] / (2*(n+1)) + P[n,j] / (2*(n-1)) + 1 / (n^2-1) )
+            Sb[j, n+1] = rpi2 * ( P[n+2,j] / (2*(n+1)) - P[n,j] / (2*(n-1)) + 1 / (n^2-1) )
         end
     end
     return Sb
