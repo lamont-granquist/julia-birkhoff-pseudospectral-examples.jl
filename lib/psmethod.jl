@@ -24,7 +24,7 @@ function gen_sa(P, N, tau)
     return Sa
 end
 
-function gen_sb(P, N, tau) # XXX: broke
+function gen_sb(P, N, tau)
     Sb = zeros(N+1, N+1)
     rpi2 = 2.0/π
     rpi = 1.0/π
@@ -34,7 +34,6 @@ function gen_sb(P, N, tau) # XXX: broke
         # k = 1
         Sb[j, 2] = rpi * (tau[j]^2 - tau[end]^2)
         for n in 2:N
-            # FIXME: doesn't seem to be right
             Sb[j, n+1] = rpi2 * ( P[n+2,j] / (2*(n+1)) - P[n,j] / (2*(n-1)) + 1 / (n^2-1) )
         end
     end
@@ -56,7 +55,7 @@ function psmethod(N)
     tau = reverse(clenshawcurtisnodes(Float64, N+1))
     w = cgl_weights(N)
     μ = FastTransforms.chebyshevmoments1(Float64, N+1)
-    wB = clenshawcurtisweights(μ)
+    #wB = clenshawcurtisweights(μ) # this may be slighly more accurate than taking it from the last row of the Ba matrix?
 
     P = chebeval(N+2, tau)
 
@@ -68,10 +67,9 @@ function psmethod(N)
 
     # Proposition 6
     Ba = Sa * Q
-    Bb = Sb * Q # FIXME: broke
+    Bb = Sb * Q
 
-    # the last row of Ba is identically equal to the Birkhoff quadrature weights
-    # the first row of Bb is identically equal to the negative of the Birkhoff quadrature weights
+    wB = Ba[end, :]
 
     return tau, w, wB, Ba, Bb
 end
