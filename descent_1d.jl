@@ -58,8 +58,8 @@ function descent_1d()
 
     X = hcat( h, v, m )
     V = hcat( hdot, vdot, mdot )
-    Xi = hcat(ha, va, ma)
-    Xf = hcat(hb, vb, mb)
+    Xa = hcat(ha, va, ma)
+    Xb = hcat(hb, vb, mb)
 
     #
     # Endpoint constraints
@@ -82,9 +82,9 @@ function descent_1d()
              -T ./ 2.349,
             )
 
-    @constraint(model, dyn1, 0 == X - Ba * V - Xi .* ones(N))
+    @constraint(model, dyn1, 0 == X - Ba * V - Xa .* ones(N))
     @constraint(model, dyn2, 0 == (tf - ti) / 2 * F - V)
-    @constraint(model, dyn3, 0 == Xi + wB' * V - Xf)
+    @constraint(model, dyn3, 0 == Xa + wB' * V - Xb)
 
     #
     # Objective
