@@ -467,10 +467,10 @@ function delta3()
     # Path constraints
     #
 
-    @constraint(model, r1norm >= ones(N))
-    @constraint(model, r2norm >= ones(N))
-    @constraint(model, r3norm >= ones(N))
-    @constraint(model, r4norm >= ones(N))
+    #@constraint(model, r1norm >= ones(N))
+    #@constraint(model, r2norm >= ones(N))
+    #@constraint(model, r3norm >= ones(N))
+    #@constraint(model, r4norm >= ones(N))
 
     #
     # Continuity constraints
