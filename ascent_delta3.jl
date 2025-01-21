@@ -22,11 +22,8 @@ using ForwardDiff
 
 foreach(include, glob("*.jl", "lib"))
 
-const integral = false
-const costate = false
-
 # number of grid points
-const N = 15
+const N = 45
 
 #
 # Earth
@@ -608,7 +605,6 @@ function delta3()
     @printf "argp: %6.2f°\n" rad2deg(argp)
     @printf "nu:   %6.2f°\n" rad2deg(nu)
 
-    if !integral && costate
         #
         # Setup Hamiltonian system
         #
@@ -629,102 +625,51 @@ function delta3()
         # Pull costate estimate out of the KKT multipliers
         #
 
-        D0 = D[:, 1]
+        Ω1 = -value.(dual(ΨB1)) ./ wB
+        λ1 = -value.(dual(ΨV1)) ./ wB
+        λb1 = -value.(dual(Ψb1))
+        λa1 = λb1 - wB' * Ω1
 
-        Λ1 = -dual(dyn1)
-        Λ2 = -dual(dyn2)
-        Λ3 = -dual(dyn3)
-        Λ4 = -dual(dyn4)
+        display(Ω1)
+        display(λ1)
+        display(λa1)
+        display(λb1)
 
-        if method == "LG"
-            λ1f = -dual(dynf1)
-            λ2f = -dual(dynf2)
-            λ3f = -dual(dynf3)
-            λ4f = -dual(dynf4)
+        Ω2 = -value.(dual(ΨB2)) ./ wB
+        λ2 = -value.(dual(ΨV2)) ./ wB
+        λb2 = -value.(dual(Ψb2))
+        λa2 = λb2 - wB' * Ω2
 
-            λ1 = vcat(
-                      (1+w'*D0)*λ1f - D0' * Λ1,
-                      Λ1 ./ w,
-                      λ1f,
-                     )
-            λ2 = vcat(
-                      (1+w'*D0)*λ2f - D0' * Λ2,
-                      Λ2 ./ w,
-                      λ2f,
-                     )
-            λ3 = vcat(
-                      (1+w'*D0)*λ3f - D0' * Λ3,
-                      Λ3 ./ w,
-                      λ3f,
-                     )
-            λ4 = vcat(
-                      (1+w'*D0)*λ4f - D0' * Λ4,
-                      Λ4 ./ w,
-                      λ4f,
-                     )
-        else
-            λ1 = vcat(
-                      -D0' * Λ1,
-                      Λ1 ./ w,
-                     )
-            λ2 = vcat(
-                      -D0' * Λ2,
-                      Λ2 ./ w,
-                     )
-            λ3 = vcat(
-                      -D0' * Λ3,
-                      Λ3 ./ w,
-                     )
-            λ4 = vcat(
-                      -D0' * Λ4,
-                      Λ4 ./ w,
-                     )
-        end
+        Ω3 = -value.(dual(ΨB3)) ./ wB
+        λ3 = -value.(dual(ΨV3)) ./ wB
+        λb3 = -value.(dual(Ψb3))
+        λa3 = λb3 - wB' * Ω3
 
-        #
-        # Extract subsets of the costate
-        #
-
-        if method == "LG"
-            λ1c = λ1[2:end-1,:]
-            λ2c = λ2[2:end-1,:]
-            λ3c = λ3[2:end-1,:]
-            λ4c = λ4[2:end-1,:]
-            λ1p = λ1[1:end-1,:]
-            λ2p = λ2[1:end-1,:]
-            λ3p = λ3[1:end-1,:]
-            λ4p = λ4[1:end-1,:]
-        else
-            λ1c = λ1[2:end,:]
-            λ2c = λ2[2:end,:]
-            λ3c = λ3[2:end,:]
-            λ4c = λ4[2:end,:]
-            λ1p = λ1
-            λ2p = λ2
-            λ3p = λ3
-            λ4p = λ4
-        end
+        Ω4 = -value.(dual(ΨB4)) ./ wB
+        λ4 = -value.(dual(ΨV4)) ./ wB
+        λb4 = -value.(dual(Ψb4))
+        λa4 = λb4 - wB' * Ω4
 
         #
         # Generate hamiltonian values from PS solution
         #
 
-        H1 = H.(eachrow(r1c), eachrow(v1c), m1c, eachrow(λ1c[:,1:3]), eachrow(λ1c[:,4:6]), λ1c[:,7], eachrow(u1), T1s, mdot1s)
-        H2 = H.(eachrow(r2c), eachrow(v2c), m2c, eachrow(λ2c[:,1:3]), eachrow(λ2c[:,4:6]), λ2c[:,7], eachrow(u2), T2s, mdot2s)
-        H3 = H.(eachrow(r3c), eachrow(v3c), m3c, eachrow(λ3c[:,1:3]), eachrow(λ3c[:,4:6]), λ3c[:,7], eachrow(u3), T3s, mdot3s)
-        H4 = H.(eachrow(r4c), eachrow(v4c), m4c, eachrow(λ4c[:,1:3]), eachrow(λ4c[:,4:6]), λ4c[:,7], eachrow(u4), T4s, mdot4s)
+        H1 = H.(eachrow(r1), eachrow(v1), m1, eachrow(λ1[:,1:3]), eachrow(λ1[:,4:6]), λ1[:,7], eachrow(u1), T1s, mdot1s)
+        H2 = H.(eachrow(r2), eachrow(v2), m2, eachrow(λ2[:,1:3]), eachrow(λ2[:,4:6]), λ2[:,7], eachrow(u2), T2s, mdot2s)
+        H3 = H.(eachrow(r3), eachrow(v3), m3, eachrow(λ3[:,1:3]), eachrow(λ3[:,4:6]), λ3[:,7], eachrow(u3), T3s, mdot3s)
+        H4 = H.(eachrow(r4), eachrow(v4), m4, eachrow(λ4[:,1:3]), eachrow(λ4[:,4:6]), λ4[:,7], eachrow(u4), T4s, mdot4s)
 
         #
         # Interpolate Costates
         #
 
-        range = LinRange(-1,1,20)
-        L = lagrange_basis(ptau, range)
+        #range = LinRange(-1,1,20)
+        #L = lagrange_basis(ptau, range)
 
-        λ1 = reduce(hcat,lagrange_interpolation(L, col) for col in eachcol(value.(λ1p)))
-        λ2 = reduce(hcat,lagrange_interpolation(L, col) for col in eachcol(value.(λ2p)))
-        λ3 = reduce(hcat,lagrange_interpolation(L, col) for col in eachcol(value.(λ3p)))
-        λ4 = reduce(hcat,lagrange_interpolation(L, col) for col in eachcol(value.(λ4p)))
+        #λ1 = reduce(hcat,lagrange_interpolation(L, col) for col in eachcol(value.(λ1p)))
+        #λ2 = reduce(hcat,lagrange_interpolation(L, col) for col in eachcol(value.(λ2p)))
+        #λ3 = reduce(hcat,lagrange_interpolation(L, col) for col in eachcol(value.(λ3p)))
+        #λ4 = reduce(hcat,lagrange_interpolation(L, col) for col in eachcol(value.(λ4p)))
 
         λ = [λ1; λ2; λ3; λ4]
 
@@ -811,7 +756,6 @@ function delta3()
 
         @printf "rel terminal pos error: %e\n" norm( xf[1:3] - r4[N,:] ) / norm(r4[N,:])
         @printf "rel termianl vel error: %e\n" norm( xf[4:6] - v4[N,:] ) / norm(v4[N,:])
-    end
 
     #
     # Descale and interpolate the variables
@@ -905,7 +849,6 @@ function delta3()
               ylabel = "Control",
               legend = false
              )
-    if costate
         p5 = plot(
                   t,
                   λvnorm,
@@ -960,9 +903,6 @@ function delta3()
              )
 
         display(plot(p1, p2, p3, p4, p5, p6, p7, p8, layout=(3,3), legend=false))
-    else
-        display(plot(p1, p2, p3, p4, layout=(3,3), legend=false))
-    end
 
     readline()
 
