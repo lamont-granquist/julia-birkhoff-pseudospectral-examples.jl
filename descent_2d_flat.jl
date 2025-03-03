@@ -153,10 +153,6 @@ function descent_2d_flat()
     λb = value.(dual(dyn3))
     λa = λb - wB' * Ω
 
-    display(value.(Xa))
-    display(value.(Xb))
-    display(value.(X))
-    display(value.(V))
     #display(Λ)
     #display(Ω)
     #display(λa)
