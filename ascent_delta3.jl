@@ -9,6 +9,13 @@
 # multiple-phase optimal control problems using hp-adaptive Gaussian quadrature
 # collocation methods and sparse nonlinear programming. ACM Transactions on
 # Mathematical Software (TOMS), 41(1), 1-37.
+#
+# Ross, I. M. (2024). Universal Birkhoff Theory for Fast Trajectory Optimization.
+# Journal of Guidance, Control, and Dynamics, 47(12), 2468-2481.
+#
+# Proulx, R. J., & Ross, I. M. (2024). Implementations of the Universal Birkhoff
+# Theory for Fast Trajectory Optimization. Journal of Guidance, Control, and
+# Dynamics, 47(12), 2482-2496.
 
 using JuMP
 import Ipopt
